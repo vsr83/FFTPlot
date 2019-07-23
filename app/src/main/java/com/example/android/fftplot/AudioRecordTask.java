@@ -73,7 +73,7 @@ public class AudioRecordTask extends AsyncTask <Void, float[], Boolean>{
                     numSamples = 0;
 
                     for (int indArray = 0; indArray < mFFTSize; indArray++) {
-                        FFTBuffer[indArray] = new Complex(readBuffer[indArray], 0);
+                        FFTBuffer[indArray] = new Complex(ringBuffer[indArray], 0);
                     }
                     FastFourierTransform.fft(FFTBuffer);
 

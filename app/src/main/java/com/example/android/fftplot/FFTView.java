@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.DashPathEffect;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.view.View;
 
 import java.util.Vector;
@@ -18,9 +19,9 @@ public class FFTView extends View {
     private float mBorderYDp = 10.0f;
 
     private float mMinimumFrequency = 10.0f;
-    private float mMaximumFrequency = 10000.0f;
-    private float mMinimumAmplitude = 1e-2f;
-    private float mMaximumAmplitude = 1000.0f;
+    private float mMaximumFrequency = 20000.0f;
+    private float mMinimumAmplitude = 0.1f;
+    private float mMaximumAmplitude = 1000.01f;
 
     private Paint mPaintThin, mPaintGrid, mPaintBorder, mPaintSpectrum, mPaintText;
 
@@ -112,7 +113,8 @@ public class FFTView extends View {
 
         for (int freqLog = (int)Math.floor(Math.log10(mMinimumFrequency)); freqLog < Math.ceil(Math.log10(mMaximumFrequency)); freqLog++) {
             for (int df = 1; df < 10; df++) {
-                float freqPx = mapFreqtoPx(df * (float) Math.pow(10.0, (double) freqLog));
+                float freq = df * (float) Math.pow(10.0, (double) freqLog);
+                float freqPx = mapFreqtoPx(freq);
 
                 if (df == 1) {
                     canvas.drawLine(freqPx, mapAmpltoPx(mMinimumAmplitude), freqPx, mapAmpltoPx(mMaximumAmplitude), mPaintThin);
@@ -120,14 +122,17 @@ public class FFTView extends View {
                     mPaintText.setTextAlign(Paint.Align.CENTER);
                     canvas.drawText(String.format("%d Hz", (int)Math.pow(10.0, (double)freqLog)), freqPx, getBottom() - paddingPx, mPaintText);
                 } else {
-                    canvas.drawLine(freqPx, mapAmpltoPx(mMinimumAmplitude), freqPx, mapAmpltoPx(mMaximumAmplitude), mPaintGrid);
+                    if (freq >= mMinimumFrequency && freq <= mMaximumFrequency) {
+                        canvas.drawLine(freqPx, mapAmpltoPx(mMinimumAmplitude), freqPx, mapAmpltoPx(mMaximumAmplitude), mPaintGrid);
+                    }
                 }
             }
         }
 
         for (int amplLog = (int)Math.floor(Math.log10(mMinimumAmplitude)); amplLog < Math.ceil(Math.log10(mMaximumAmplitude)); amplLog++) {
             for (int df = 1; df < 10; df++) {
-                float amplPx = mapAmpltoPx(df * (float) Math.pow(10.0, (double) amplLog));
+                float ampl = df * (float) Math.pow(10.0, (double) amplLog);
+                float amplPx = mapAmpltoPx(ampl);
 
                 if (df == 1) {
                     canvas.drawLine(mapFreqtoPx(mMinimumFrequency), amplPx, mapFreqtoPx(mMaximumFrequency), amplPx, mPaintThin);
@@ -135,10 +140,33 @@ public class FFTView extends View {
                     mPaintText.setTextAlign(Paint.Align.RIGHT);
                     canvas.drawText(String.format("%d dB ", (int) amplLog * 20), mapFreqtoPx(mMinimumFrequency), amplPx, mPaintText);
                 } else {
-                    canvas.drawLine(mapFreqtoPx(mMinimumFrequency), amplPx, mapFreqtoPx(mMaximumFrequency), amplPx, mPaintGrid);
+                    if (ampl >= mMinimumAmplitude && ampl <= mMaximumAmplitude) {
+                        canvas.drawLine(mapFreqtoPx(mMinimumFrequency), amplPx, mapFreqtoPx(mMaximumFrequency), amplPx, mPaintGrid);
+                    }
                 }
             }
         }
+        canvas.clipRect(mapFreqtoPx(mMinimumFrequency), mapAmpltoPx(mMaximumAmplitude),
+                        mapFreqtoPx(mMaximumFrequency), mapAmpltoPx(mMinimumAmplitude));
+        if (frequencyValues != null && amplitudeValues != null) {
+            Path path = new Path();
+
+            for (int indValue = 0; indValue < frequencyValues.size(); indValue++) {
+                float x = mapFreqtoPx(frequencyValues.get(indValue));
+                float y = mapAmpltoPx(amplitudeValues.get(indValue));
+
+                if (x <= 0.0f) x = 0.0f;
+                if (y <= 0.0f) y = 0.0f;
+
+                if (indValue == 0) {
+                    path.moveTo(x, y);
+                } else {
+                    path.lineTo(x, y);
+                }
+            }
+            canvas.drawPath(path, mPaintSpectrum);
+        }
+        canvas.clipRect(getLeft(), getTop(), getRight(), getBottom());
     }
 
     public static float pxFromDp(final Context context, final float dp) {
