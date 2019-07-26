@@ -14,16 +14,31 @@ public class FFTView extends View {
     private Vector<Float> frequencyValues;
     private Vector<Float> amplitudeValues;
 
-    private float mPaddingDp = 20.0f;
-    private float mBorderXDp = 20.0f;
+    private float mPaddingDp = 30.0f;
+    private float mBorderXDp = 15.0f;
     private float mBorderYDp = 10.0f;
 
     private float mMinimumFrequency = 10.0f;
     private float mMaximumFrequency = 20000.0f;
     private float mMinimumAmplitude = 0.1f;
     private float mMaximumAmplitude = 1000.01f;
+    private Boolean mActiveStatus = false;
 
-    private Paint mPaintThin, mPaintGrid, mPaintBorder, mPaintSpectrum, mPaintText;
+    private Paint mPaintThin, mPaintGrid, mPaintBorder, mPaintSpectrum, mPaintText, mPaintTitle;
+
+    public void setConfiguration(float minimumFrequency, float maximumFrequency, float minimumAmplitude, float maximumAmplitude) {
+        mMinimumFrequency = minimumFrequency;
+        mMaximumFrequency = maximumFrequency;
+        mMinimumAmplitude = minimumAmplitude;
+        mMaximumAmplitude = maximumAmplitude;
+
+        invalidate();
+    }
+
+    void setActive(Boolean activeStatus) {
+        mActiveStatus = activeStatus;
+        invalidate();
+    }
 
     public FFTView(Context context) {
         super(context);
@@ -56,6 +71,10 @@ public class FFTView extends View {
         mPaintText = new Paint(Paint.LINEAR_TEXT_FLAG | Paint.ANTI_ALIAS_FLAG);
         mPaintText.setColor(Color.BLACK);
         mPaintText.setTextSize(pxFromDp(context, 12));
+
+        mPaintTitle = new Paint(Paint.LINEAR_TEXT_FLAG | Paint.ANTI_ALIAS_FLAG);
+        mPaintTitle.setColor(Color.BLACK);
+        mPaintTitle.setTextSize(pxFromDp(context, 20));
 
     }
 
@@ -146,6 +165,9 @@ public class FFTView extends View {
                 }
             }
         }
+
+        // Draw FFT Data:
+        canvas.save();
         canvas.clipRect(mapFreqtoPx(mMinimumFrequency), mapAmpltoPx(mMaximumAmplitude),
                         mapFreqtoPx(mMaximumFrequency), mapAmpltoPx(mMinimumAmplitude));
         if (frequencyValues != null && amplitudeValues != null) {
@@ -166,7 +188,12 @@ public class FFTView extends View {
             }
             canvas.drawPath(path, mPaintSpectrum);
         }
-        canvas.clipRect(getLeft(), getTop(), getRight(), getBottom());
+        // Draw Status Labels
+        canvas.restore();
+        mPaintTitle.setTextAlign(Paint.Align.LEFT);
+        canvas.drawText("Active=" + mActiveStatus , mapFreqtoPx(mMinimumFrequency), paddingPx * 0.66f, mPaintTitle);
+        mPaintTitle.setTextAlign(Paint.Align.RIGHT);
+        canvas.drawText("Swipe left for configuration" , mapFreqtoPx(mMaximumFrequency), paddingPx * 0.66f, mPaintTitle);
     }
 
     public static float pxFromDp(final Context context, final float dp) {

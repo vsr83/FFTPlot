@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">FFTPlot</string>
+    <string name="FFTSize">FFT Size</string>
+    <string name="swipeLeft">Swipe left for configuration</string>
+    <string name="confInfo">Swipe right to return\n\n</string>
+    <string name="SamplesPerUpdate">PCM Samples per Update</string>
+    <string name="minimumFrequency">Minimum Frequency</string>
+    <string name="maximumFrequency">Maximum Frequency</string>
+    <string name="minimumAmplitude">Minimum Amplitude</string>
+    <string name="maximumAmplitude">Maximum Amplitude</string>
 </resources>

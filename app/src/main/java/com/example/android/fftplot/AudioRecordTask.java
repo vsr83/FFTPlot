@@ -27,7 +27,6 @@ public class AudioRecordTask extends AsyncTask <Void, float[], Boolean>{
         mBufferSizeRead = bufferSizeRead;
         mSamplesPerUpdate = samplesPerUpdate;
         mFFTSize = FFTSize;
-
     }
 
     // Runs in a separate thread.
@@ -37,7 +36,13 @@ public class AudioRecordTask extends AsyncTask <Void, float[], Boolean>{
         final int encoding = AudioFormat.ENCODING_PCM_FLOAT;
         int numSamples = 0;
 
-        int bufferSizeInt = 2 * AudioRecord.getMinBufferSize(mSampleRate, channelMask, encoding);
+        int bufferSizeInt = AudioRecord.getMinBufferSize(mSampleRate, channelMask, encoding);
+
+        // Recording parameters are not supported by the hardware or an invalid parameter was passed.
+        if (bufferSizeInt == AudioRecord.ERROR_BAD_VALUE) {
+            return false;
+        }
+        bufferSizeInt *= 2;
 
         // It is unclear whether getMinBufferSize can return small values.
         if (bufferSizeInt < 2 * mBufferSizeRead) {
